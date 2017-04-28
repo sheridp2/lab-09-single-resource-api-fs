@@ -1,15 +1,28 @@
 {
-  "name": "lab-patrick",
+  "name": "lab-09",
   "version": "1.0.0",
-  "description": "Lab-09",
+  "description": "",
   "main": "server.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "mocha",
-    "start": "node server.js"
+    "start": "node server.js",
+    "watch": "nodemon server.js",
+    "debug": "DEBUG=http* nodemon server.js"
   },
+  "keywords": [],
   "author": "Patrick Sheridan",
-  "license": "MIT"
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-http": "^3.0.0",
+    "debug": "^2.6.4",
+    "mocha": "^3.3.0"
+  }
 }
