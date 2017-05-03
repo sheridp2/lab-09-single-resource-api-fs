@@ -1,7 +1,9 @@
 'use strict';
 
 const debug = require('debug')('http:storage');
-const storage = {};
+const Promise = require('bluebird');
+const fs = Promise.promisifyAll(require('fs'), {suffix: 'Prom'});
+// const storage = {};
 
 module.exports = exports = {};
 
@@ -10,11 +12,14 @@ exports.createItem = function(schema, item) {
 
   if(!schema) return Promise.reject(new Error('shema required'));
   if(!item) return Promise.reject(new Error('item required'));
-  if(!storage[schema]) storage[schema] = {};
+  // if(!storage[schema]) storage[schema] = {};
 
-  storage[schema][item.id] = item;
-
-  return Promise.resolve(item);
+  // storage[schema][item.id] = item;
+  let stringItem = JSON.stringify(item);
+  console.log('about to wite to file');
+  return fs.writeFileProm(`${__dirname}/../data/${schema}/${item.id}.json`, stringItem)
+  .then(() => item)
+  .catch(err => Promise.reject(err));
 };
 
 exports.fetchItem = function(schema, id) {
@@ -24,13 +29,13 @@ exports.fetchItem = function(schema, id) {
     if(!schema) return reject(new Error('shema required'));
     if(!id) return reject(new Error('id required'));
 
-    let schemaName = storage[schema];
-    if(!schemaName) return reject(new Error('schema not found'));
+    return fs.readFileProm(`${__dirname}/../data/${schema}/${id}.json`)
+    .then((data) =>{
+      let parseItem = JSON.parse(data.toString());
 
-    let item = schemaName[id];
-    if(!item) return reject(new Error('item not found'));
-
-    resolve(item);
+      return resolve(parseItem);
+    })
+    .catch(err => Promise.reject(err));
   });
 };
 
@@ -41,17 +46,20 @@ exports.updateItem = function(schema, id, car){
     if(!schema) return reject(new Error('shema required'));
     if(!id) return reject(new Error('id required'));
 
-    let schemaName = storage[schema];
-    if(!schemaName) return reject(new Error('schema not found'));
+    return fs.readFileProm(`${__dirname}/../data/${schema}/${id}.json`)
+    .then((data) =>{
+      let parseItem = JSON.parse(data.toString());
+      console.log(parseItem);
 
-    let item = schemaName[id];
-    if(!item) return reject(new Error('item not found'));
+      // parseItem.name = car.name;
+      // parseItem.model = car.model;
+      // parseItem.horsepower = car.horsepower;
 
-    if(item.name) item.name = car.name;
-    if(item.model) item.model = car.model;
-    if(item.horsepower) item.horsepower = car.horsepower;
-
-    resolve(car);
+      fs.writeFileProm(`${__dirname}/../data/${schema}/${parseItem.id}.json`, parseItem)
+      .then(() => parseItem)
+      .catch(err => Promise.reject(err));
+      return resolve(car);
+    });
   });
 };
 
@@ -62,13 +70,8 @@ exports.deleteItem = function(schema, id) {
     if(!schema) return reject(new Error('shema required'));
     if(!id) return reject(new Error('id required'));
 
-    let schemaName = storage[schema];
-    if(!schemaName) return reject(new Error('schema not found'));
+    fs.unlinkProm(`${__dirname}/../data/${schema}/${id}.json`);
+    return resolve();
 
-    let item = schemaName[id];
-    if(!item) return reject(new Error('item not found'));
-
-    delete(schemaName[id]);
-    resolve(item);
   });
 };
